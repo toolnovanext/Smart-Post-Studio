@@ -1,0 +1,190 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Post Studio</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Accessible outline for focus */
+        button:focus {
+            outline: 2px solid #333;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-center items-center">
+    <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+        <h1 class="text-2xl font-bold mb-4 text-center">Smart Post Studio</h1>
+
+        <div class="mb-4">
+            <label for="content-type" class="block mb-2">Select content type:</label>
+            <select id="content-type" class="form-select block w-full">
+                <option value="">--Select--</option>
+                <option value="social-media">Social Media Post</option>
+                <option value="article-blog">Article/Blog</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="language" class="block mb-2">Select language:</label>
+            <select id="language" class="form-select block w-full">
+                <option value="">--Select--</option>
+                <option value="bengali">Bengali</option>
+                <option value="english">English</option>
+                <option value="hindi">Hindi</option>
+                <option value="arabic">Arabic</option>
+                <option value="urdu">Urdu</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="category" class="block mb-2">Select category:</label>
+            <select id="category" class="form-select block w-full">
+                <option value="">--Select--</option>
+                <option value="education">Education</option>
+                <option value="motivation">Motivation</option>
+                <option value="technology">Technology</option>
+                <option value="business">Business</option>
+                <option value="travel">Travel</option>
+                <option value="fashion">Fashion</option>
+                <option value="food">Food</option>
+                <option value="finance">Finance</option>
+                <option value="lifestyle">Lifestyle</option>
+                <option value="health">Health</option>
+                <option value="marketing">Marketing</option>
+                <option value="design">Design</option>
+                <option value="productivity">Productivity</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="personal-growth">Personal Growth</option>
+            </select>
+        </div>
+
+        <!-- Tone section -->
+        <div class="mb-4">
+            <label for="tone" class="block mb-2">Select tone:</label>
+            <select id="tone" class="form-select block w-full">
+                <option value="">--Select--</option>
+                <option value="formal">Formal</option>
+                <option value="friendly">Friendly</option>
+                <option value="persuasive">Persuasive</option>
+                <option value="humorous">Humorous</option>
+                <option value="emotional">Emotional</option>
+                <option value="inspirational">Inspirational</option>
+                <option value="professional">Professional</option>
+            </select>
+        </div>
+
+        <!-- Handles for Social Media -->
+        <div id="social-media-fields" class="mb-4 hidden">
+            <div class="mb-2">
+                <label for="handle" class="block">User's Social Media Handle or Name:</label>
+                <input type="text" id="handle" class="form-input mt-1 block w-full">
+            </div>
+        </div>
+
+        <!-- Common Topic input -->
+        <div class="mb-4">
+            <label for="topic" class="block mb-2">Topic:</label>
+            <input type="text" id="topic" class="form-input mt-1 block w-full">
+        </div>
+
+        <button class="w-full" onclick="generateContent()">Let's Make Magic!</button>
+
+        <div id="output" class="mt-6 p-4 bg-gray-100 rounded-lg shadow-inner"></div>
+    </div>
+
+    <footer class="mt-6 text-center">
+        <a href="#" class="text-blue-600">Made with ❤️</a>
+    </footer>
+
+    <script>
+        const contentTypeElement = document.getElementById('content-type');
+        const socialMediaFields = document.getElementById('social-media-fields');
+        const output = document.getElementById('output');
+        
+        contentTypeElement.addEventListener('change', function () {
+            if (this.value === 'social-media') {
+                socialMediaFields.classList.remove('hidden');
+            } else {
+                socialMediaFields.classList.add('hidden');
+            }
+        });
+
+        function generateContent() {
+            const contentType = contentTypeElement.value;
+            const language = document.getElementById('language').value;
+            const category = document.getElementById('category').value;
+            const tone = document.getElementById('tone').value;
+            const topic = document.getElementById('topic').value;
+            const handle = document.getElementById('handle').value;
+
+            if (!contentType || !language || !category || !tone || !topic || (contentType === 'social-media' && !handle)) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            let substitutedPrompt = "";
+
+            if (contentType === 'social-media') {
+                substitutedPrompt = `Please create a social media post for the user ${handle}. Topic: ${topic}. Language: ${language}. Category: ${category}. Tone: ${tone}.`;
+            } else if (contentType === 'article-blog') {
+                substitutedPrompt = `Please create an article/blog on the topic "${topic}". Language: ${language}. Category: ${category}. Tone: ${tone}.`;
+            }
+
+            // Clear previous output
+            output.innerText = "";
+
+            const websocket = new WebSocket('wss://backend.buildpicoapps.com/ask_ai_streaming_v2');
+
+            websocket.addEventListener("open", () => {
+                websocket.send(
+                    JSON.stringify({
+                        appId: "opportunity-pressure",
+                        prompt: substitutedPrompt,
+                    })
+                );
+            });
+
+            websocket.addEventListener("message", (event) => {
+                console.log(event.data);
+                output.innerText = `${output.innerText}${event.data}`;
+            });
+
+            websocket.addEventListener("close", (event) => {
+                console.log("Connection closed", event.code, event.reason);
+                if (event.code != 1000) {
+                    alert("Oops, we ran into an error. Refresh the page and try again.");
+                }
+            });
+
+            websocket.addEventListener("error", (error) => {
+                console.log('WebSocket error', error);
+                alert("Oops, we ran into an error. Refresh the page and try again.");
+            });
+        }
+    </script>
+</body>
+
+</html>
